@@ -1,0 +1,5 @@
+client id = cafetera1
+server= m12.cloudmqtt.com
+port= 11780
+username= jrqjoeaf
+password = M0Pq9YB-OYi2
