@@ -1,0 +1,137 @@
+# Parameters can be overwritten on the command line
+# for example: cntk configFile=myConfigFile RootDir=../.. 
+# For running from Visual Studio add
+# currentDirectory=$(SolutionDir)/<path to corresponding data folder> 
+RootDir = ".."
+
+ConfigDir = "$RootDir$/Config"
+DataDir   = "$RootDir$/Data"
+OutputDir = "$RootDir$/Output"
+ModelDir  = "$OutputDir$/Models"
+
+deviceId = 0
+imageLayout = "cudnn"
+# override the above as follows when running on CPU:
+# deviceId = -1
+
+command = train:test
+
+precision = "float"
+modelPath = "$ModelDir$/01_OneHidden"
+ndlMacros = "$ConfigDir$/Macros.ndl"
+
+# uncomment the following line to write logs to a file 
+# stderr = "$OutputDir$/01_OneHidden_out"
+traceLevel=1
+numMBsToShowResult=500
+
+# If set to true, always initialize the network on CPU, making initialization consistent across CPU and GPU targets (for testing).
+initOnCPUOnly=true
+
+#######################################
+#  TRAINING CONFIG                    #
+#######################################
+
+train = [
+    action = "train"
+
+    NDLNetworkBuilder = [
+        networkDescription = "$ConfigDir$/01_OneHidden.ndl"
+    ]
+    
+    SGD = [
+        epochSize = 60000
+        minibatchSize = 32
+        learningRatesPerMB = 0.1
+        momentumPerMB = 0
+        maxEpochs = 30
+    ]
+    
+    # Note: this reader crashes if randomization is turned on.
+    #reader = [
+    #    readerType = "UCIFastReader"
+    #    # To get the data (Train-28x28.txt) please run `python mnist_convert.py` 
+    #    # from the 'AdditionalFiles' folder. See REAMDE.md for details.
+    #    file = "$DataDir$/Train-28x28.txt"
+        
+    #    features = [
+    #        dim = 784
+    #        start = 1
+    #    ]
+        
+    #    labels = [
+    #        dim = 1
+    #        start = 0
+    #        labelDim = 10
+    #        labelMappingFile = "$DataDir$/labelsmap.txt"
+    #    ]
+    #]    
+    reader=[
+        readerType="ImageReader"
+        file=$ConfigDir$/train_map.txt
+        #randomize=Auto
+        features=[
+            # Below are the required parameters.
+            width=224
+            height=224
+            channels=3
+            # Below are the optional parameters.
+            # Possible values: Center, Random, MultiView10. Default: Center
+            cropType=Random
+            # Horizontal random flip, will be enabled by default if cropType=Random
+            #hflip=0
+            # Crop scale ratio. Examples: cropRatio=0.9, cropRatio=0.7:0.9. Default: 1.
+            cropRatio=0.875
+            # Crop scale ratio jitter type.
+            # Possible values: None, UniRatio, UniLength, UniArea. Default: UniRatio
+            jitterType=UniRatio
+            # Interpolation to use when scaling image to width x height size.
+            # Possible values: nearest, linear, cubic, lanczos. Default: linear.
+            interpolations=Linear
+            # Aspect ratio jitter radius. Default is 0 (disabled).
+            aspectRatioRadius=0:0.2
+            # Brightness, contrast and color jittering. Default is 0 (disabled).
+            # Using 0 in the first epoch so the network can process original images.
+            brightnessRadius=0:0.2
+            contrastRadius=0:0.2
+            saturationRadius=0:0.4
+            # Intensity jittering: enabled if file is specified and intensityStdDev > 0. 
+            # The file stores 1x3 vector (eigenvalues) and 3x3 matrix (eigenvectors) in OpenCV XML format.
+            intensityFile="$ConfigDir$/ImageNet1K_intensity.xml"
+            # StdDev for intensity jittering. Start from the second epoch.
+            intensityStdDev=0:0.1
+            # Mean subtraction: enabled if file is specified.
+            # The file stores mean values for each pixel in OpenCV matrix XML format.
+            meanFile=$ConfigDir$/ImageNet1K_mean.xml
+        ]
+        labels=[
+            labelDim=1000
+        ]
+    ]    
+]
+
+#######################################
+#  TEST CONFIG                        #
+#######################################
+
+test = [
+    action = "test"
+    minibatchSize = 16
+
+    reader = [
+        readerType = "UCIFastReader"
+        file = "$DataDir$/Test-28x28.txt"
+        
+        features = [
+            dim = 784
+            start = 1
+        ]
+        
+        labels = [
+            dim = 1
+            start = 0
+            labelDim = 10
+            labelMappingFile = "$DataDir$/labelsmap.txt"
+        ]
+    ]    
+]
