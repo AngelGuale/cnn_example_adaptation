@@ -44,14 +44,14 @@ train = [
     
     SGD = [
 	#epochSize = 60000
-        epochSize = 34
+        epochSize = 68
 	#minibatchSize = 32
-	minibatchSize = 2
+	minibatchSize = 4
         learningRatesPerMB = 0.1*5:0.3
        #learningRatesPerPerSample = 0.03
 	 momentumPerMB = 0*10:0.7
 	#maxEpochs = 15
-	maxEpochs= 12
+	maxEpochs= 24
     ]
     
     # Note: this reader crashes if randomization is turned on.
